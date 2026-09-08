@@ -612,12 +612,6 @@ Singleton {
                 "label": I18n.tr("Restart DMS"),
                 "key": "D"
             };
-        case "switchuser":
-            return {
-                "icon": "switch_account",
-                "label": I18n.tr("Switch User"),
-                "key": "U"
-            };
         default:
             return {
                 "icon": "help",

@@ -14,12 +14,9 @@ Item {
     readonly property var log: Log.scoped("DMSShellIPC")
 
     required property var powerMenuModalLoader
-    required property var processListModalLoader
     required property var controlCenterLoader
     required property var dankDashPopoutLoader
-    required property var notepadSlideoutVariants
     required property var hyprKeybindsModalLoader
-    required property var dankBarRepeater
     required property var hyprlandOverviewLoader
     required property var workspaceRenameModalLoader
     required property var windowRuleModalLoader
@@ -28,10 +25,6 @@ Item {
         const focusedScreenName = BarWidgetService.getFocusedScreenName();
 
         const bars = [];
-        if (root.dankBarRepeater) {
-            for (let i = 0; i < root.dankBarRepeater.count; i++)
-                bars.push(...(root.dankBarRepeater.itemAt(i)?.item?.barVariants?.instances || []));
-        }
         for (const screenName in BarWidgetService.frameHostedBars)
             bars.push(...BarWidgetService.frameBarsForScreen(screenName));
 
@@ -171,47 +164,6 @@ Item {
         }
 
         target: "powermenu"
-    }
-
-    IpcHandler {
-        function open(): string {
-            root.processListModalLoader.active = true;
-            Qt.callLater(() => {
-                if (root.processListModalLoader.item)
-                    root.processListModalLoader.item.show();
-            });
-
-            return "PROCESSLIST_OPEN_SUCCESS";
-        }
-
-        function close(): string {
-            if (root.processListModalLoader.item)
-                root.processListModalLoader.item.hide();
-
-            return "PROCESSLIST_CLOSE_SUCCESS";
-        }
-
-        function toggle(): string {
-            root.processListModalLoader.active = true;
-            Qt.callLater(() => {
-                if (root.processListModalLoader.item)
-                    root.processListModalLoader.item.toggle();
-            });
-
-            return "PROCESSLIST_TOGGLE_SUCCESS";
-        }
-
-        function focusOrToggle(): string {
-            root.processListModalLoader.active = true;
-            Qt.callLater(() => {
-                if (root.processListModalLoader.item)
-                    root.processListModalLoader.item.focusOrToggle();
-            });
-
-            return "PROCESSLIST_FOCUS_OR_TOGGLE_SUCCESS";
-        }
-
-        target: "processlist"
     }
 
     IpcHandler {
@@ -394,142 +346,6 @@ Item {
         }
 
         target: "dash"
-    }
-
-    IpcHandler {
-        function getFocusedScreenName() {
-            if (CompositorService.isHyprland && Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.monitor) {
-                return Hyprland.focusedWorkspace.monitor.name;
-            }
-            if (CompositorService.isNiri && NiriService.currentOutput) {
-                return NiriService.currentOutput;
-            }
-            if ((CompositorService.isSway || CompositorService.isScroll || CompositorService.isMiracle) && I3.workspaces?.values) {
-                const focusedWs = I3.workspaces.values.find(ws => ws.focused === true);
-                return focusedWs?.monitor?.name || "";
-            }
-            if (CompositorService.isMango && MangoService.activeOutput) {
-                return MangoService.activeOutput;
-            }
-            return "";
-        }
-
-        function getActiveNotepadInstance() {
-            if (root.notepadSlideoutVariants.instances.length === 0) {
-                return null;
-            }
-
-            if (root.notepadSlideoutVariants.instances.length === 1) {
-                return root.notepadSlideoutVariants.instances[0];
-            }
-
-            var focusedScreen = getFocusedScreenName();
-            if (focusedScreen && root.notepadSlideoutVariants.instances.length > 0) {
-                for (var i = 0; i < root.notepadSlideoutVariants.instances.length; i++) {
-                    var slideout = root.notepadSlideoutVariants.instances[i];
-                    if (slideout.modelData && slideout.modelData.name === focusedScreen) {
-                        return slideout;
-                    }
-                }
-            }
-
-            for (var i = 0; i < root.notepadSlideoutVariants.instances.length; i++) {
-                var slideout = root.notepadSlideoutVariants.instances[i];
-                if (slideout.isVisible) {
-                    return slideout;
-                }
-            }
-
-            return root.notepadSlideoutVariants.instances[0];
-        }
-
-        function open(): string {
-            if (PopoutService.notepadResolvedMode === "popout") {
-                PopoutService.openNotepadPopout();
-                return "NOTEPAD_OPEN_SUCCESS";
-            }
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.show();
-                return "NOTEPAD_OPEN_SUCCESS";
-            }
-            return "NOTEPAD_OPEN_FAILED";
-        }
-
-        function openFile(path: string): string {
-            if (!path)
-                return open();
-            if (PopoutService.notepadResolvedMode === "popout") {
-                PopoutService.openNotepadPopoutWithFile(path);
-                return "NOTEPAD_OPEN_FILE_SUCCESS";
-            }
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.show();
-                instance.loadedItem?.openExternalFile(path);
-                return "NOTEPAD_OPEN_FILE_SUCCESS";
-            }
-            return "NOTEPAD_OPEN_FILE_FAILED";
-        }
-
-        function close(): string {
-            if (PopoutService.notepadResolvedMode === "popout") {
-                PopoutService.notepadPopout?.hide();
-                return "NOTEPAD_CLOSE_SUCCESS";
-            }
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.hide();
-                return "NOTEPAD_CLOSE_SUCCESS";
-            }
-            return "NOTEPAD_CLOSE_FAILED";
-        }
-
-        function toggle(): string {
-            if (PopoutService.notepadResolvedMode === "popout") {
-                PopoutService.toggleNotepadPopout();
-                return "NOTEPAD_TOGGLE_SUCCESS";
-            }
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.toggle();
-                return "NOTEPAD_TOGGLE_SUCCESS";
-            }
-            return "NOTEPAD_TOGGLE_FAILED";
-        }
-
-        function expand(): string {
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.expandedWidth = true;
-                if (!instance.isVisible)
-                    instance.show();
-                return "NOTEPAD_EXPAND_SUCCESS";
-            }
-            return "NOTEPAD_EXPAND_FAILED";
-        }
-
-        function collapse(): string {
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.expandedWidth = false;
-                if (!instance.isVisible)
-                    instance.show();
-                return "NOTEPAD_COLLAPSE_SUCCESS";
-            }
-            return "NOTEPAD_COLLAPSE_FAILED";
-        }
-
-        function toggleExpand(): string {
-            var instance = getActiveNotepadInstance();
-            if (instance) {
-                instance.expandedWidth = !instance.expandedWidth;
-                return "NOTEPAD_TOGGLE_EXPAND_SUCCESS";
-            }
-            return "NOTEPAD_TOGGLE_EXPAND_FAILED";
-        }
-
-        target: "notepad"
     }
 
     IpcHandler {

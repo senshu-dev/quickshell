@@ -16,7 +16,6 @@ DankModal {
 
     signal powerActionRequested(string action, string title, string message)
     signal lockRequested
-    signal switchUserRequested
 
     function openCentered() {
         parentBounds = Qt.rect(0, 0, 0, 0);
@@ -89,7 +88,6 @@ DankModal {
             focus: true
             onPowerActionRequested: action => root.powerActionRequested(action, "", "")
             onLockRequested: root.lockRequested()
-            onSwitchUserRequested: root.switchUserRequested()
             onCloseRequested: root.close()
         }
     }

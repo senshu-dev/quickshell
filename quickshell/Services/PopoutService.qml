@@ -13,10 +13,6 @@ Singleton {
     property var controlCenterLoader: null
     property var notificationCenterPopout: null
     property var notificationCenterLoader: null
-    property var appDrawerPopout: null
-    property var appDrawerLoader: null
-    property var processListPopout: null
-    property var processListPopoutLoader: null
     property var dankDashPopout: null
     property var dankDashPopoutLoader: null
     property var batteryPopout: null
@@ -44,8 +40,6 @@ Singleton {
     property var powerMenuModalLoader: null
     property var powerMenuPopout: null
     property var powerMenuPopoutLoader: null
-    property var processListModal: null
-    property var processListModalLoader: null
     property var colorPickerModal: null
     property var notificationModal: null
     property var wifiPasswordModal: null
@@ -62,8 +56,6 @@ Singleton {
     property var windowRuleModalLoader: null
     property var powerProfileModal: null
     property var powerProfileModalLoader: null
-
-    property var notepadSlideouts: []
 
     property string pendingThemeInstall: ""
     property string pendingPluginInstall: ""
@@ -118,8 +110,6 @@ Singleton {
             "dankDash": () => _unloadPopoutNow("dankDashPopout", "dankDashPopoutLoader"),
             "controlCenter": () => _unloadPopoutNow("controlCenterPopout", "controlCenterLoader"),
             "notificationCenter": () => _unloadPopoutNow("notificationCenterPopout", "notificationCenterLoader"),
-            "appDrawer": () => _unloadPopoutNow("appDrawerPopout", "appDrawerLoader"),
-            "processList": () => _unloadPopoutNow("processListPopout", "processListPopoutLoader"),
             "battery": () => _unloadPopoutNow("batteryPopout", "batteryPopoutLoader"),
             "vpn": () => _unloadPopoutNow("vpnPopout", "vpnPopoutLoader"),
             "colorPicker": () => _unloadPopoutNow("colorPickerPopout", "colorPickerPopoutLoader"),
@@ -210,50 +200,6 @@ Singleton {
         if (notificationCenterPopout) {
             setPosition(notificationCenterPopout, x, y, width, section, screen);
             notificationCenterPopout.toggle();
-        }
-    }
-
-    function openAppDrawer(x, y, width, section, screen) {
-        if (appDrawerPopout) {
-            setPosition(appDrawerPopout, x, y, width, section, screen);
-            appDrawerPopout.open();
-        }
-    }
-
-    function closeAppDrawer() {
-        appDrawerPopout?.close();
-    }
-
-    function unloadAppDrawer() {
-        _scheduleUnload("appDrawer");
-    }
-
-    function toggleAppDrawer(x, y, width, section, screen) {
-        if (appDrawerPopout) {
-            setPosition(appDrawerPopout, x, y, width, section, screen);
-            appDrawerPopout.toggle();
-        }
-    }
-
-    function openProcessList(x, y, width, section, screen) {
-        if (processListPopout) {
-            setPosition(processListPopout, x, y, width, section, screen);
-            processListPopout.open();
-        }
-    }
-
-    function closeProcessList() {
-        processListPopout?.close();
-    }
-
-    function unloadProcessListPopout() {
-        _scheduleUnload("processList");
-    }
-
-    function toggleProcessList(x, y, width, section, screen) {
-        if (processListPopout) {
-            setPosition(processListPopout, x, y, width, section, screen);
-            processListPopout.toggle();
         }
     }
 
@@ -932,35 +878,6 @@ Singleton {
         }
     }
 
-    function showProcessListModal() {
-        if (processListModal) {
-            processListModal.show();
-        } else if (processListModalLoader) {
-            processListModalLoader.active = true;
-            Qt.callLater(() => processListModal?.show());
-        }
-    }
-
-    function hideProcessListModal() {
-        processListModal?.hide();
-    }
-
-    function unloadProcessListModal() {
-        if (processListModalLoader) {
-            processListModal = null;
-            processListModalLoader.active = false;
-        }
-    }
-
-    function toggleProcessListModal() {
-        if (processListModal) {
-            processListModal.toggle();
-        } else if (processListModalLoader) {
-            processListModalLoader.active = true;
-            Qt.callLater(() => processListModal?.show());
-        }
-    }
-
     function showColorPicker() {
         colorPickerModal?.show();
     }
@@ -1040,135 +957,4 @@ Singleton {
         networkInfoModal?.close();
     }
 
-    function closeNotepadSlideouts() {
-        for (var i = 0; i < notepadSlideouts.length; i++) {
-            if (notepadSlideouts[i] && notepadSlideouts[i].isVisible)
-                notepadSlideouts[i].hide();
-        }
-    }
-
-    function notepadSlideoutForFocusedScreen() {
-        if (!notepadSlideouts || notepadSlideouts.length === 0)
-            return null;
-        const focused = BarWidgetService.getFocusedScreenName();
-        if (focused) {
-            for (var i = 0; i < notepadSlideouts.length; i++) {
-                if (notepadSlideouts[i]?.modelData?.name === focused)
-                    return notepadSlideouts[i];
-            }
-        }
-        return notepadSlideouts[0];
-    }
-
-    // Remembered presentation wins over the configured default until the user
-    // changes the default in settings (handled below).
-    readonly property string notepadResolvedMode: SessionData.notepadLastMode || SettingsData.notepadDefaultMode
-
-    function openNotepadSlideout() {
-        SessionData.setNotepadLastMode("slideout");
-        notepadPopout?.hide();
-        if (notepadSlideouts.length > 0) {
-            notepadSlideoutForFocusedScreen()?.show();
-        }
-    }
-
-    // Keep the notepad in a single presentation for default modes
-    Connections {
-        target: SettingsData
-        function onNotepadDefaultModeChanged() {
-            SessionData.setNotepadLastMode(SettingsData.notepadDefaultMode);
-            if (SettingsData.notepadDefaultMode === "popout") {
-                var hadSlideout = false;
-                for (var i = 0; i < root.notepadSlideouts.length; i++) {
-                    if (root.notepadSlideouts[i] && root.notepadSlideouts[i].isVisible) {
-                        hadSlideout = true;
-                        root.notepadSlideouts[i].hide();
-                    }
-                }
-                if (hadSlideout)
-                    root.openNotepadPopout();
-            } else if (root.notepadPopout && root.notepadPopout.visible) {
-                root.notepadPopout.hide();
-                root.openNotepadSlideout();
-            }
-        }
-    }
-
-    function openNotepad() {
-        if (notepadResolvedMode === "popout") {
-            openNotepadPopout();
-            return;
-        }
-        openNotepadSlideout();
-    }
-
-    function closeNotepad() {
-        if (notepadResolvedMode === "popout") {
-            notepadPopout?.hide();
-            return;
-        }
-        if (notepadSlideouts.length > 0) {
-            notepadSlideoutForFocusedScreen()?.hide();
-        }
-    }
-
-    function toggleNotepad() {
-        if (notepadResolvedMode === "popout") {
-            toggleNotepadPopout();
-            return;
-        }
-        if (notepadSlideouts.length > 0) {
-            notepadSlideoutForFocusedScreen()?.toggle();
-        }
-    }
-
-    property var notepadPopout: null
-    property var notepadPopoutLoader: null
-    property bool _notepadPopoutWantsOpen: false
-    property string _notepadPendingOpenFilePath: ""
-
-    function openNotepadPopout() {
-        SessionData.setNotepadLastMode("popout");
-        closeNotepadSlideouts();
-        if (notepadPopout) {
-            notepadPopout.show();
-        } else if (notepadPopoutLoader) {
-            _notepadPopoutWantsOpen = true;
-            notepadPopoutLoader.active = true;
-        }
-    }
-
-    function openNotepadPopoutWithFile(path) {
-        closeNotepadSlideouts();
-        if (notepadPopout) {
-            notepadPopout.show();
-            notepadPopout.notepad?.openExternalFile(path);
-        } else if (notepadPopoutLoader) {
-            _notepadPendingOpenFilePath = path;
-            _notepadPopoutWantsOpen = true;
-            notepadPopoutLoader.active = true;
-        }
-    }
-
-    function _onNotepadPopoutLoaded() {
-        if (_notepadPopoutWantsOpen && notepadPopout) {
-            _notepadPopoutWantsOpen = false;
-            notepadPopout.show();
-            if (_notepadPendingOpenFilePath) {
-                const pendingPath = _notepadPendingOpenFilePath;
-                _notepadPendingOpenFilePath = "";
-                notepadPopout.notepad?.openExternalFile(pendingPath);
-            }
-        }
-    }
-
-    function toggleNotepadPopout() {
-        if (notepadPopout) {
-            if (!notepadPopout.visible)
-                closeNotepadSlideouts();
-            notepadPopout.toggle();
-        } else {
-            openNotepadPopout();
-        }
-    }
 }

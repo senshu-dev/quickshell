@@ -2110,12 +2110,5 @@ Item {
                 Qt.callLater(() => passwordField.forceActiveFocus());
             }
         }
-        onSwitchUserRequested: {
-            switchUserPicker.showFromLockScreen();
-        }
-    }
-
-    SwitchUserModal {
-        id: switchUserPicker
     }
 }

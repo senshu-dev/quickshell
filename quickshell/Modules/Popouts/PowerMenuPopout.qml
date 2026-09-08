@@ -8,7 +8,6 @@ DankPopout {
 
     signal powerActionRequested(string action)
     signal lockRequested
-    signal switchUserRequested
 
     layerNamespace: "dms:power-menu"
     popupWidth: contentLoader.item?.desiredWidth ?? 400
@@ -35,7 +34,6 @@ DankPopout {
             focus: true
             onPowerActionRequested: action => root.powerActionRequested(action)
             onLockRequested: root.lockRequested()
-            onSwitchUserRequested: root.switchUserRequested()
             onCloseRequested: root.close()
         }
     }

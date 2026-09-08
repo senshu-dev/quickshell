@@ -267,13 +267,6 @@ Item {
                 "icon": "keyboard"
             },
             {
-                "id": "notepadButton",
-                "text": I18n.tr("Notepad"),
-                "description": I18n.tr("Quick access to notepad"),
-                "icon": "assignment",
-                "enabled": true
-            },
-            {
                 "id": "colorPicker",
                 "text": I18n.tr("Color Picker"),
                 "description": I18n.tr("Quick access to color picker"),

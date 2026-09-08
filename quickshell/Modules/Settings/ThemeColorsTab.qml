@@ -1986,7 +1986,7 @@ Item {
 
             SettingsCard {
                 tab: "theme"
-                tags: ["floating", "window", "settings", "notepad", "authentication", "polkit", "opacity", "transparency", "foreground", "tile", "tiling"]
+                tags: ["floating", "window", "settings", "authentication", "polkit", "opacity", "transparency", "foreground", "tile", "tiling"]
                 title: I18n.tr("Floating Windows")
                 settingKey: "floatingWindows"
                 iconName: "open_in_new"
@@ -2007,7 +2007,7 @@ Item {
                     tags: ["floating", "window", "opacity", "transparency"]
                     settingKey: "floatingWindowTransparency"
                     text: I18n.tr("Window Opacity")
-                    description: I18n.tr("Opacity of floating DMS windows like Settings, Notepad, and authentication prompts")
+                    description: I18n.tr("Opacity of floating DMS windows like Settings and authentication prompts")
                     value: Math.round(Theme.floatingWindowTransparency * 100)
                     minimum: 0
                     maximum: 100

@@ -27,7 +27,6 @@ FocusScope {
 
     signal powerActionRequested(string action)
     signal lockRequested
-    signal switchUserRequested
     signal closeRequested
 
     implicitHeight: (SettingsData.powerMenuGridLayout ? buttonGrid.implicitHeight : buttonColumn.implicitHeight) + Theme.spacingL * 2 + (needsConfirmation ? hintRow.height + Theme.spacingM : 0)
@@ -129,10 +128,6 @@ FocusScope {
         closeRequested();
         if (action === "lock") {
             lockRequested();
-            return;
-        }
-        if (action === "switchuser") {
-            switchUserRequested();
             return;
         }
         root.powerActionRequested(action);

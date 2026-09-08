@@ -1190,16 +1190,6 @@ PanelWindow {
     }
 
     Loader {
-        anchors.fill: parent
-        z: 1
-        active: win._connectedActive
-        sourceComponent: FrameBarHost {
-            frameWindow: win
-            targetScreen: win.targetScreen
-        }
-    }
-
-    Loader {
         id: frameDockHostLoader
         anchors.fill: parent
         z: 1

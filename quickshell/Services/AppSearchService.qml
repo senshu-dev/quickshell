@@ -177,28 +177,6 @@ Singleton {
                 defaultTrigger: "",
                 isLauncher: false
             },
-            "dms_notepad": {
-                id: "dms_notepad",
-                name: I18n.tr("Notepad", "Notepad"),
-                icon: "svg+corner:" + dmsLogoPath + "|description",
-                cornerIcon: "description",
-                comment: "DMS",
-                action: "ipc:notepad",
-                categories: ["Office", "Utility"],
-                defaultTrigger: "",
-                isLauncher: false
-            },
-            "dms_sysmon": {
-                id: "dms_sysmon",
-                name: I18n.tr("System Monitor", "sysmon window title"),
-                icon: "svg+corner:" + dmsLogoPath + "|monitor_heart",
-                cornerIcon: "monitor_heart",
-                comment: "DMS",
-                action: "ipc:processlist",
-                categories: ["System", "Monitor"],
-                defaultTrigger: "",
-                isLauncher: false
-            },
             "dms_colorpicker": {
                 id: "dms_colorpicker",
                 name: I18n.tr("Color Picker"),
@@ -466,12 +444,6 @@ Singleton {
         switch (parts[1]) {
         case "settings":
             PopoutService.focusOrToggleSettings();
-            return true;
-        case "notepad":
-            PopoutService.toggleNotepad();
-            return true;
-        case "processlist":
-            PopoutService.toggleProcessListModal();
             return true;
         case "color-picker":
             PopoutService.showColorPicker();

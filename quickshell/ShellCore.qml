@@ -1,8 +1,6 @@
 import QtQuick
 import Quickshell
 import qs.Common
-import qs.Modules.DankBar
-import qs.Modules.DankIsland
 import qs.Modules.Frame
 import qs.Modules.WorkspaceOverlays
 import qs.Services
@@ -16,34 +14,12 @@ Item {
     property int pendingFrameTransitionRevision: 0
     property bool frameSurfacesLoaded: true
 
-    property alias dankBarRepeater: dankBarRepeater
     property alias hyprlandOverviewLoader: hyprlandOverviewLoader
 
     signal surfaceRecoveryPass
 
-    property string _barLayoutStateJson: {
-        if (!barSurfacesLoaded)
-            return "[]";
-        const configs = SettingsData.getBarKindConfigs();
-        const mapped = configs.map(c => ({
-                    id: c.id,
-                    position: c.position,
-                    autoHide: c.autoHide,
-                    visible: c.visible
-                })).sort((a, b) => {
-            const aVertical = a.position === SettingsData.Position.Left || a.position === SettingsData.Position.Right;
-            const bVertical = b.position === SettingsData.Position.Left || b.position === SettingsData.Position.Right;
-            if (aVertical !== bVertical) {
-                return aVertical - bVertical;
-            }
-            return String(a.id).localeCompare(String(b.id));
-        });
-        return JSON.stringify(mapped);
-    }
-
     function recreateBarSurfaces() {
         log.info("Recreating bar surfaces, screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","));
-        dankBarRepeater.horizontalReady = 0;
         if (barSurfacesLoaded)
             barSurfacesLoaded = false;
         barSurfaceReloadAction.schedule();
@@ -105,56 +81,6 @@ Item {
     DeferredAction {
         id: frameSurfaceReloadAction
         onTriggered: root.frameSurfacesLoaded = true
-    }
-
-    Repeater {
-        id: dankBarRepeater
-        model: ScriptModel {
-            id: barRepeaterModel
-            values: JSON.parse(root._barLayoutStateJson)
-        }
-
-        Component.onCompleted: BarWidgetService.dankBarRepeater = dankBarRepeater
-
-        property var hyprlandOverviewLoaderRef: hyprlandOverviewLoader
-
-        // Horizontal bars must claim their exclusive zones first, so vertical bars wait for every enabled horizontal bar to load
-        readonly property int horizontalWanted: SettingsData.getBarKindConfigs().filter(c => (c.enabled ?? false) && c.position !== SettingsData.Position.Left && c.position !== SettingsData.Position.Right).length
-        property int horizontalReady: 0
-        onHorizontalWantedChanged: recountHorizontalReady()
-
-        function recountHorizontalReady() {
-            let ready = 0;
-            for (let i = 0; i < count; i++) {
-                const loader = itemAt(i);
-                if (loader?.item && !loader.isVertical)
-                    ready++;
-            }
-            horizontalReady = ready;
-        }
-
-        delegate: Loader {
-            id: barLoader
-            required property var modelData
-            property var barConfig: SettingsData.barConfigs.find(cfg => cfg.id === modelData.id) || null
-            readonly property bool isVertical: modelData.position === SettingsData.Position.Left || modelData.position === SettingsData.Position.Right
-            active: root.barSurfacesLoaded && (barConfig?.enabled ?? false) && (!isVertical || dankBarRepeater.horizontalReady >= dankBarRepeater.horizontalWanted)
-            asynchronous: false
-            onItemChanged: dankBarRepeater.recountHorizontalReady()
-
-            sourceComponent: DankBar {
-                barConfig: barLoader.barConfig
-                hyprlandOverviewLoader: dankBarRepeater.hyprlandOverviewLoaderRef
-            }
-        }
-    }
-
-    Loader {
-        active: SettingsData.dankIslandEnabled
-        asynchronous: false
-        sourceComponent: DankIsland {
-            hyprlandOverviewLoader: root.hyprlandOverviewLoader
-        }
     }
 
     property bool hadRealScreen: true

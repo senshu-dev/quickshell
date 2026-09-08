@@ -11,18 +11,15 @@ import qs.Modals.Greeter
 import qs.Modals.Settings
 import qs.Modals.DankLauncherV2
 import qs.Modules
-import qs.Modules.AppDrawer
 import qs.Modules.DankDash
 import qs.Modules.ControlCenter
 import qs.Modules.Dock
 import qs.Modules.Lock
-import qs.Modules.Notepad
 import qs.Modules.Notifications.Center
 import qs.Widgets
 import qs.Modules.Notifications.Popup
 import qs.Modules.OSD
-import qs.Modules.ProcessList
-import qs.Modules.DankBar.Popouts
+import qs.Modules.Popouts
 import qs.Modules.WorkspaceOverlays
 import qs.Modules.Settings.DisplayConfig
 import qs.Services
@@ -30,7 +27,6 @@ import qs.Services
 Item {
     id: root
     readonly property var log: Log.scoped("DMSShell")
-    readonly property var _sessionsServiceRef: SessionsService
     readonly property var _displayServiceRef: DisplayService
 
     property var core: null
@@ -643,25 +639,6 @@ Item {
     }
 
     LazyLoader {
-        id: processListPopoutLoader
-
-        active: false
-
-        Component.onCompleted: {
-            PopoutService.processListPopoutLoader = processListPopoutLoader;
-        }
-
-        ProcessListPopout {
-            id: processListPopout
-            onPopoutClosed: PopoutService.unloadProcessListPopout()
-
-            Component.onCompleted: {
-                PopoutService.processListPopout = processListPopout;
-            }
-        }
-    }
-
-    LazyLoader {
         id: settingsModalLoader
 
         active: false
@@ -687,25 +664,6 @@ Item {
                 } else if (wasShown) {
                     Qt.callLater(() => PopoutService.unloadSettingsNow());
                 }
-            }
-        }
-    }
-
-    LazyLoader {
-        id: appDrawerLoader
-
-        active: false
-
-        Component.onCompleted: {
-            PopoutService.appDrawerLoader = appDrawerLoader;
-        }
-
-        AppDrawerPopout {
-            id: appDrawerPopout
-            onPopoutClosed: PopoutService.unloadAppDrawer()
-
-            Component.onCompleted: {
-                PopoutService.appDrawerPopout = appDrawerPopout;
             }
         }
     }
@@ -765,10 +723,6 @@ Item {
                 PopoutService.clipboardHistoryPopout = clipboardHistoryPopout;
             }
         }
-    }
-
-    MuxModal {
-        id: muxModal
     }
 
     ClipboardHistoryModal {
@@ -944,31 +898,6 @@ Item {
     }
 
     LazyLoader {
-        id: processListModalLoader
-
-        active: false
-
-        Component.onCompleted: PopoutService.processListModalLoader = processListModalLoader
-
-        ProcessListModal {
-            id: processListModal
-            property bool wasShown: false
-
-            Component.onCompleted: {
-                PopoutService.processListModal = processListModal;
-            }
-
-            onVisibleChanged: {
-                if (visible) {
-                    wasShown = true;
-                } else if (wasShown) {
-                    PopoutService.unloadProcessListModal();
-                }
-            }
-        }
-    }
-
-    LazyLoader {
         id: systemUpdateLoader
 
         active: false
@@ -992,67 +921,6 @@ Item {
         }
     }
 
-    Variants {
-        id: notepadSlideoutVariants
-        model: SettingsData.getFilteredScreens("notepad")
-
-        delegate: DankSlideout {
-            id: notepadSlideout
-            title: I18n.tr("Notepad")
-            slideoutWidth: 480
-            expandable: true
-            expandedWidthValue: 960
-            edgeGap: SettingsData.notepadEffectiveEdgeGap
-            slideEdge: SettingsData.notepadSlideoutSide
-            customTransparency: Theme.notepadTransparency
-
-            onIsVisibleChanged: {
-                if (isVisible)
-                    PopoutService.notepadPopout?.hide();
-            }
-
-            content: Component {
-                Notepad {
-                    slideout: notepadSlideout
-                    onHideRequested: notepadSlideout.hide()
-                    onPopoutRequested: {
-                        notepadSlideout.hide();
-                        PopoutService.openNotepadPopout();
-                    }
-                }
-            }
-
-            function toggle() {
-                if (isVisible) {
-                    hide();
-                } else {
-                    show();
-                }
-            }
-        }
-
-        onInstancesChanged: PopoutService.notepadSlideouts = instances
-        Component.onCompleted: PopoutService.notepadSlideouts = instances
-    }
-
-    LazyLoader {
-        id: notepadPopoutLoader
-        active: false
-
-        Component.onCompleted: {
-            PopoutService.notepadPopoutLoader = notepadPopoutLoader;
-        }
-
-        onActiveChanged: {
-            if (active && item) {
-                PopoutService.notepadPopout = item;
-                PopoutService._onNotepadPopoutLoaded();
-            }
-        }
-
-        NotepadPopoutWindow {}
-    }
-
     LazyLoader {
         id: powerMenuModalLoader
 
@@ -1067,7 +935,6 @@ Item {
 
             onPowerActionRequested: (action, title, message) => root._executePowerAction(action)
             onLockRequested: root._lockFromPowerMenu()
-            onSwitchUserRequested: root._switchUserFromPowerMenu()
 
             Component.onCompleted: {
                 PopoutService.powerMenuModal = powerMenuModal;
@@ -1085,14 +952,6 @@ Item {
         lock.activate();
     }
 
-    function _switchUserFromPowerMenu() {
-        switchUserModalLoader.active = true;
-        Qt.callLater(() => {
-            if (switchUserModalLoader.loadedModal)
-                switchUserModalLoader.loadedModal.showFromPowerMenu();
-        });
-    }
-
     LazyLoader {
         id: powerMenuPopoutLoader
 
@@ -1107,23 +966,11 @@ Item {
 
             onPowerActionRequested: action => root._executePowerAction(action)
             onLockRequested: root._lockFromPowerMenu()
-            onSwitchUserRequested: root._switchUserFromPowerMenu()
             onPopoutClosed: PopoutService.unloadPowerMenuPopout()
 
             Component.onCompleted: {
                 PopoutService.powerMenuPopout = powerMenuPopout;
             }
-        }
-    }
-
-    LazyLoader {
-        id: switchUserModalLoader
-
-        active: false
-        readonly property SwitchUserModal loadedModal: item as SwitchUserModal
-
-        SwitchUserModal {
-            id: switchUserModal
         }
     }
 
@@ -1161,12 +1008,9 @@ Item {
 
     DMSShellIPC {
         powerMenuModalLoader: powerMenuModalLoader
-        processListModalLoader: processListModalLoader
         controlCenterLoader: controlCenterLoader
         dankDashPopoutLoader: dankDashPopoutLoader
-        notepadSlideoutVariants: notepadSlideoutVariants
         hyprKeybindsModalLoader: hyprKeybindsModalLoader
-        dankBarRepeater: root.core?.dankBarRepeater ?? null
         hyprlandOverviewLoader: root.core?.hyprlandOverviewLoader ?? null
         workspaceRenameModalLoader: workspaceRenameModalLoader
         windowRuleModalLoader: windowRuleModalLoader

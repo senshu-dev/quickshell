@@ -59,12 +59,6 @@ Item {
                 "name": I18n.tr("Toast Messages"),
                 "description": I18n.tr("System toast notifications"),
                 "icon": "campaign"
-            },
-            {
-                "id": "notepad",
-                "name": I18n.tr("Notepad Slideout"),
-                "description": I18n.tr("Quick note-taking slideout panel"),
-                "icon": "sticky_note_2"
             }
         ];
     }
@@ -437,7 +431,7 @@ Item {
                                             const prefs = root.getScreenPreferences(parent.componentId);
                                             const isAll = prefs.includes("all") || (typeof prefs[0] === "string" && prefs[0] === "all");
                                             const cid = parent.componentId;
-                                            const isRelevantComponent = ["dankBar", "dock", "notifications", "osd", "toast", "notepad"].includes(cid) || cid.startsWith("bar:");
+                                            const isRelevantComponent = ["dankBar", "dock", "notifications", "osd", "toast"].includes(cid) || cid.startsWith("bar:");
                                             return !isAll && isRelevantComponent;
                                         }
                                         onToggled: checked => {
