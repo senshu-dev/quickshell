@@ -1,7 +1,7 @@
-import Qt.labs.folderlistmodel
 import QtCore
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
 import qs.Common
 import qs.Modals.FileBrowser
@@ -38,21 +38,87 @@ Item {
     // Shared with the wallpaper FileBrowser via CacheData.fileBrowserSettings["wallpaper"]
     property string sortBy: "name"
     property bool sortAscending: true
-    // Forces the page grid to rebuild when the folder model reorders in place.
+    // Forces the page grid to rebuild when the wallpaper list reorders in place.
     property int gridRevision: 0
     property int pagerCachePages: 1
+    // Raw recursive scan results for wallpaperDir: [{filePath, fileName, size, mtime}]
+    property var wallpaperFiles: []
+    property bool scanning: false
 
     signal requestTabChange(int newIndex)
 
     function refreshAfterSort() {
-        // Defer until FolderListModel finishes reordering.
-        Qt.callLater(() => {
-            rebuildWallpaperList(true);
-        });
+        rebuildWallpaperList(true);
     }
 
-    function cleanFilePath(path) {
-        return path ? path.toString().replace(/^file:\/\//, '') : "";
+    function extensionOf(fileName) {
+        const dot = fileName.lastIndexOf('.');
+        return dot >= 0 ? fileName.substring(dot + 1).toLowerCase() : "";
+    }
+
+    function compareWallpaperFiles(a, b) {
+        switch (root.sortBy) {
+        case "size":
+            return a.size - b.size;
+        case "modified":
+            return a.mtime - b.mtime;
+        case "type":
+            {
+                const extCompare = extensionOf(a.fileName).localeCompare(extensionOf(b.fileName));
+                return extCompare !== 0 ? extCompare : a.fileName.localeCompare(b.fileName, undefined, {
+                    numeric: true,
+                    sensitivity: "base"
+                });
+            }
+        default:
+            return a.fileName.localeCompare(b.fileName, undefined, {
+                numeric: true,
+                sensitivity: "base"
+            });
+        }
+    }
+
+    function parseScanOutput(text) {
+        const files = [];
+        if (!text)
+            return files;
+        const lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (!line)
+                continue;
+            const firstSpace = line.indexOf(' ');
+            if (firstSpace === -1)
+                continue;
+            const secondSpace = line.indexOf(' ', firstSpace + 1);
+            if (secondSpace === -1)
+                continue;
+            const filePath = line.substring(secondSpace + 1);
+            if (!filePath)
+                continue;
+            files.push({
+                filePath,
+                fileName: filePath.substring(filePath.lastIndexOf('/') + 1),
+                mtime: parseFloat(line.substring(0, firstSpace)) || 0,
+                size: parseInt(line.substring(firstSpace + 1, secondSpace), 10) || 0
+            });
+        }
+        return files;
+    }
+
+    function scanWallpaperFolder() {
+        // Cancel any in-flight scan for a previous folder to avoid stale results.
+        if (wallpaperScanProcess.running)
+            wallpaperScanProcess.running = false;
+        if (!wallpaperDir) {
+            wallpaperFiles = [];
+            scanning = false;
+            rebuildWallpaperList(true);
+            return;
+        }
+        scanning = true;
+        wallpaperScanProcess.command = ["sh", "-c", `find -L "${wallpaperDir}" -type f \\( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" -o -iname "*.gif" -o -iname "*.webp" -o -iname "*.jxl" -o -iname "*.avif" -o -iname "*.heif" -o -iname "*.exr" \\) -printf '%T@ %s %p\\n' 2>/dev/null`];
+        wallpaperScanProcess.running = true;
     }
 
     function wallpaperPathAt(index) {
@@ -84,20 +150,15 @@ Item {
 
     function rebuildWallpaperList(preferCurrentWallpaper) {
         const paths = [];
-        if (wallpaperFolderModel.status === FolderListModel.Ready) {
-            const terms = searchTerms();
-            const rowCount = wallpaperFolderModel.count;
-            for (let i = 0; i < rowCount; i++) {
-                const filePath = cleanFilePath(wallpaperFolderModel.get(i, "filePath"));
-                if (!filePath)
-                    continue;
-                if (terms.length > 0) {
-                    const fileName = wallpaperFolderModel.get(i, "fileName") || filePath.substring(filePath.lastIndexOf('/') + 1);
-                    if (!matchesTerms(terms, fileName, filePath))
-                        continue;
-                }
-                paths.push(filePath);
-            }
+        const terms = searchTerms();
+        const sorted = wallpaperFiles.slice().sort(compareWallpaperFiles);
+        if (!sortAscending)
+            sorted.reverse();
+        for (let i = 0; i < sorted.length; i++) {
+            const entry = sorted[i];
+            if (terms.length > 0 && !matchesTerms(terms, entry.fileName, entry.filePath))
+                continue;
+            paths.push(entry.filePath);
         }
 
         const selectCurrent = preferCurrentWallpaper && visible && active;
@@ -163,6 +224,7 @@ Item {
         gridIndex = 0;
         searchDebounce.restart();
     }
+    onWallpaperDirChanged: scanWallpaperFolder()
 
     function loadSort() {
         const s = CacheData.fileBrowserSettings["wallpaper"];
@@ -480,17 +542,6 @@ Item {
         }
     }
 
-    Connections {
-        target: wallpaperFolderModel
-        function onCountChanged() {
-            if (wallpaperFolderModel.status === FolderListModel.Ready)
-                rebuildWallpaperList(true);
-        }
-        function onStatusChanged() {
-            rebuildWallpaperList(wallpaperFolderModel.status === FolderListModel.Ready);
-        }
-    }
-
     Timer {
         id: searchDebounce
 
@@ -499,30 +550,18 @@ Item {
         onTriggered: root.rebuildWallpaperList(false)
     }
 
-    FolderListModel {
-        id: wallpaperFolderModel
+    // Recursive scan, since Qt's FolderListModel only lists a folder's direct children.
+    Process {
+        id: wallpaperScanProcess
 
-        showDirsFirst: false
-        showDotAndDotDot: false
-        showHidden: false
-        caseSensitive: false
-        nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif", "*.webp", "*.jxl", "*.avif", "*.heif", "*.exr"]
-        showFiles: true
-        showDirs: false
-        sortField: {
-            switch (root.sortBy) {
-            case "size":
-                return FolderListModel.Size;
-            case "modified":
-                return FolderListModel.Time;
-            case "type":
-                return FolderListModel.Type;
-            default:
-                return FolderListModel.Name;
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.wallpaperFiles = root.parseScanOutput(text);
+                root.scanning = false;
+                root.rebuildWallpaperList(true);
             }
         }
-        sortReversed: !root.sortAscending
-        folder: wallpaperDir ? "file://" + wallpaperDir.split('/').map(s => encodeURIComponent(s)).join('/') : ""
     }
 
     Item {
@@ -755,12 +794,12 @@ Item {
             DankSpinner {
                 anchors.centerIn: parent
                 size: 40
-                visible: wallpaperFolderModel.status === FolderListModel.Loading && wallpaperFolderModel.count === 0
+                visible: root.scanning && root.wallpaperFiles.length === 0
             }
 
             StyledText {
                 anchors.centerIn: parent
-                visible: wallpaperFolderModel.status === FolderListModel.Ready && root.wallpaperCount === 0
+                visible: !root.scanning && root.wallpaperCount === 0 && root.wallpaperDir !== ""
                 text: root.searchQuery.trim() !== "" ? I18n.tr("No results found") : I18n.tr("No wallpapers found\n\nClick the folder icon below to browse")
                 font.pixelSize: 14
                 color: Theme.outline
@@ -857,7 +896,7 @@ Item {
                         iconSize: 20
                         buttonSize: 32
                         opacity: 0.7
-                        enabled: wallpaperFolderModel.count > 0
+                        enabled: root.wallpaperFiles.length > 0
                         tooltipText: I18n.tr("Sort wallpapers")
                         tooltipSide: "top"
                         onClicked: {
