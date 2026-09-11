@@ -18,6 +18,12 @@ PanelWindow {
 
     function toggleAutohide(): void { win.autohidden = !win.autohidden }
 
+    // Hiding this window (autohide) can leave a loaded widget's own
+    // `visible` stuck false when the window reappears, collapsing the pill
+    // even though the widget's content never changed. Re-evaluate it once
+    // we're visible again.
+    onVisibleChanged: if (win.visible) pillRow.relayoutGroups()
+
     IpcHandler {
         target: "topbar"
         function toggle(): void { win.toggleAutohide() }

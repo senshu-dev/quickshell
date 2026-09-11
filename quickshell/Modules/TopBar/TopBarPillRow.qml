@@ -33,6 +33,24 @@ Item {
     implicitWidth: pillRow.implicitWidth
     implicitHeight: 40
 
+    // Hiding the whole window (autohide) and showing it again can leave a
+    // loaded widget's own `visible` stuck false, which collapses its
+    // memberWrapper out of the RowLayout and shrinks the pill to empty even
+    // though the widget's content never actually changed. Forcing the
+    // binding to re-evaluate once the window is visible again fixes it.
+    function relayoutGroups() {
+        for (let i = 0; i < pillRepeater.count; i++) {
+            const pillItem = pillRepeater.itemAt(i);
+            if (!pillItem)
+                continue;
+            for (let j = 0; j < pillItem.memberRepeater.count; j++) {
+                const member = pillItem.memberRepeater.itemAt(j);
+                if (member)
+                    member.refreshVisibility();
+            }
+        }
+    }
+
     Component {
         id: clockDateComponent
         ClockDateWidget {}
@@ -49,12 +67,14 @@ Item {
         spacing: 8
 
         Repeater {
+            id: pillRepeater
             model: root.groups
 
             Rectangle {
                 id: pill
                 required property var modelData
                 readonly property var members: modelData
+                readonly property alias memberRepeater: memberRepeater
 
                 width: groupRow.implicitWidth + 32
                 height: 40
@@ -82,6 +102,7 @@ Item {
                     spacing: 10
 
                     Repeater {
+                        id: memberRepeater
                         model: pill.members
 
                         RowLayout {
@@ -95,6 +116,17 @@ Item {
                             // excludes invisible children from layout entirely,
                             // so this also closes the gap, not just the icon.
                             visible: !widgetHost.item || widgetHost.item.visible
+
+                            // The window hiding (autohide) and showing again can leave
+                            // widgetHost.item.visible stuck false, which this binding
+                            // then propagates - re-evaluating it once the window is
+                            // visible again clears the stuck value.
+                            function refreshVisibility() {
+                                memberWrapper.visible = true;
+                                memberWrapper.visible = Qt.binding(function () {
+                                    return !widgetHost.item || widgetHost.item.visible;
+                                });
+                            }
 
                             Rectangle {
                                 visible: memberWrapper.index > 0
