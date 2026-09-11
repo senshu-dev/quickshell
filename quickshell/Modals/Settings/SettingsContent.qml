@@ -607,6 +607,23 @@ FocusScope {
         }
 
         Loader {
+            id: topBarWidgetsLoader
+            anchors.fill: parent
+            active: root.currentIndex === 28
+            visible: active
+            focus: active
+
+            sourceComponent: TopBarWidgetsTab {
+                parentModal: root.parentModal
+            }
+
+            onActiveChanged: {
+                if (active && item)
+                    Qt.callLater(() => item.forceActiveFocus());
+            }
+        }
+
+        Loader {
             id: clipboardLoader
             anchors.fill: parent
             active: root.currentIndex === 23

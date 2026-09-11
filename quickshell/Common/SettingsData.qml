@@ -1252,6 +1252,19 @@ Singleton {
         }
     ]
 
+    property var topBarWidgets: [
+        {
+            "id": "clockDate",
+            "enabled": true,
+            "joinsPrevious": false
+        },
+        {
+            "id": "weather",
+            "enabled": true,
+            "joinsPrevious": true
+        }
+    ]
+
     property bool desktopClockEnabled: false
     property string desktopClockStyle: "analog"
     property real desktopClockTransparency: 0.8
@@ -2490,6 +2503,11 @@ Singleton {
 
     function updateBarConfigs() {
         barConfigsChanged();
+        saveSettings();
+    }
+
+    function setTopBarWidgets(widgets) {
+        topBarWidgets = widgets;
         saveSettings();
     }
 

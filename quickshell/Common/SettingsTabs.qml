@@ -76,6 +76,12 @@ Singleton {
                     "tabIndex": 22
                 },
                 {
+                    "id": "topbar_widgets",
+                    "text": I18n.tr("Top Bar Pill Widgets"),
+                    "icon": "view_agenda",
+                    "tabIndex": 28
+                },
+                {
                     "id": "workspaces",
                     "text": I18n.tr("Workspaces"),
                     "icon": "view_module",
