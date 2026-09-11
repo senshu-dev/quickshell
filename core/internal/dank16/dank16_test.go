@@ -701,8 +701,8 @@ func TestGeneratePaletteWithDPS(t *testing.T) {
 
 			bgColor := result.Color0.Hex
 			for i := 1; i < 8; i++ {
-				// Skip Color5 (container) and Color6 (exact primary) - intentionally not contrast-adjusted
-				if i == 5 || i == 6 {
+				// Skip Color6 (exact primary) - intentionally not contrast-adjusted
+				if i == 6 {
 					continue
 				}
 				lc := DeltaPhiStarContrast(colors[i].Hex, bgColor, tt.opts.IsLight)

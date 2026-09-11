@@ -343,7 +343,7 @@ func buildOnce(opts *Options) (bool, error) {
 
 	oldColors, _ := os.ReadFile(opts.ColorsOutput())
 
-	var primaryDark, primaryLight, surface string
+	var primaryDark, primaryLight, surfaceDark, surfaceLight string
 	var dank16JSON string
 	var importArgs []string
 	var sourceImage string
@@ -373,7 +373,8 @@ func buildOnce(opts *Options) (bool, error) {
 		log.Info("Using stock/custom theme colors with matugen base")
 		primaryDark = extractNestedColor(opts.StockColors, "primary", "dark")
 		primaryLight = extractNestedColor(opts.StockColors, "primary", "light")
-		surface = extractNestedColor(opts.StockColors, "surface", "dark")
+		surfaceDark = extractNestedColor(opts.StockColors, "surface", "dark")
+		surfaceLight = extractNestedColor(opts.StockColors, "surface", "light")
 
 		if primaryDark == "" {
 			return false, fmt.Errorf("failed to extract primary dark from stock colors")
@@ -381,8 +382,11 @@ func buildOnce(opts *Options) (bool, error) {
 		if primaryLight == "" {
 			primaryLight = primaryDark
 		}
+		if surfaceLight == "" {
+			surfaceLight = surfaceDark
+		}
 
-		dank16JSON = generateDank16Variants(primaryDark, primaryLight, surface, opts.Mode)
+		dank16JSON = generateDank16Variants(primaryDark, primaryLight, surfaceDark, surfaceLight, opts.Mode)
 		importData := fmt.Sprintf(`{"colors": %s, "dank16": %s}`, opts.StockColors, dank16JSON)
 		importArgs = []string{"--import-json-string", importData}
 
@@ -403,7 +407,8 @@ func buildOnce(opts *Options) (bool, error) {
 
 		primaryDark = extractMatugenColor(matJSON, "primary", "dark")
 		primaryLight = extractMatugenColor(matJSON, "primary", "light")
-		surface = extractMatugenColor(matJSON, "surface", "dark")
+		surfaceDark = extractMatugenColor(matJSON, "surface", "dark")
+		surfaceLight = extractMatugenColor(matJSON, "surface", "light")
 
 		if primaryDark == "" {
 			return false, fmt.Errorf("failed to extract primary color")
@@ -411,8 +416,11 @@ func buildOnce(opts *Options) (bool, error) {
 		if primaryLight == "" {
 			primaryLight = primaryDark
 		}
+		if surfaceLight == "" {
+			surfaceLight = surfaceDark
+		}
 
-		dank16JSON = generateDank16Variants(primaryDark, primaryLight, surface, opts.Mode)
+		dank16JSON = generateDank16Variants(primaryDark, primaryLight, surfaceDark, surfaceLight, opts.Mode)
 		importArgs = []string{"--import-json-string", buildImportData(dank16JSON, sourceImage)}
 
 		log.Infof("Running matugen %s with dank16 injection", opts.Kind)
@@ -1125,13 +1133,14 @@ func extractNestedColor(jsonStr, colorName, variant string) string {
 	return color
 }
 
-func generateDank16Variants(primaryDark, primaryLight, surface string, mode ColorMode) string {
+func generateDank16Variants(primaryDark, primaryLight, surfaceDark, surfaceLight string, mode ColorMode) string {
 	variantOpts := dank16.VariantOptions{
-		PrimaryDark:  primaryDark,
-		PrimaryLight: primaryLight,
-		Background:   surface,
-		UseDPS:       true,
-		IsLightMode:  mode == ColorModeLight,
+		PrimaryDark:     primaryDark,
+		PrimaryLight:    primaryLight,
+		BackgroundDark:  surfaceDark,
+		BackgroundLight: surfaceLight,
+		UseDPS:          true,
+		IsLightMode:     mode == ColorModeLight,
 	}
 	variantColors := dank16.GenerateVariantPalette(variantOpts)
 	return dank16.GenerateVariantJSON(variantColors)

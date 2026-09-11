@@ -576,9 +576,10 @@ func GeneratePalette(primaryColor string, opts PaletteOptions) Palette {
 		blueV := math.Min(ph.V*1.05, 1.0)
 		palette.Color4 = NewColorInfo(ensureContrastAuto(RGBToHex(HSVToRGB(HSV{H: ph.H, S: blueS, V: blueV})), bgColor, normalTextTarget, opts))
 
-		// Color5 matches primary_container exactly (light container in light mode)
+		// Color5 matches primary_container (light container in light mode), contrast-checked
+		// so it stays readable as terminal foreground text (e.g. $fg[magenta] prompts)
 		container5 := DeriveContainer(primaryColor, true)
-		palette.Color5 = NewColorInfo(container5)
+		palette.Color5 = NewColorInfo(ensureContrastAuto(container5, bgColor, normalTextTarget, opts))
 
 		palette.Color6 = NewColorInfo(primaryColor)
 
@@ -605,7 +606,7 @@ func GeneratePalette(primaryColor string, opts PaletteOptions) Palette {
 		palette.Color12 = NewColorInfo(ensureContrastBidirectional(RGBToHex(HSVToRGB(HSV{H: ph.H, S: brightBlueS, V: brightBlueV})), bgColor, accentTarget, opts))
 
 		lightContainer := DeriveContainer(primaryColor, true)
-		palette.Color13 = NewColorInfo(lightContainer)
+		palette.Color13 = NewColorInfo(ensureContrastAuto(lightContainer, bgColor, normalTextTarget, opts))
 
 		brightCyanS := ph.S * 0.5
 		brightCyanV := math.Min(ph.V*1.3, 1.0)
@@ -632,9 +633,10 @@ func GeneratePalette(primaryColor string, opts PaletteOptions) Palette {
 		blueV := ph.V * 0.95
 		palette.Color4 = NewColorInfo(ensureContrastAuto(RGBToHex(HSVToRGB(HSV{H: ph.H, S: blueS, V: blueV})), bgColor, normalTextTarget, opts))
 
-		// Color5 matches primary_container exactly (dark container in dark mode)
+		// Color5 matches primary_container (dark container in dark mode), contrast-checked
+		// so it stays readable as terminal foreground text (e.g. $fg[magenta] prompts)
 		darkContainer := DeriveContainer(primaryColor, false)
-		palette.Color5 = NewColorInfo(darkContainer)
+		palette.Color5 = NewColorInfo(ensureContrastAuto(darkContainer, bgColor, normalTextTarget, opts))
 
 		palette.Color6 = NewColorInfo(primaryColor)
 
@@ -681,11 +683,12 @@ func GeneratePalette(primaryColor string, opts PaletteOptions) Palette {
 }
 
 type VariantOptions struct {
-	PrimaryDark  string
-	PrimaryLight string
-	Background   string
-	UseDPS       bool
-	IsLightMode  bool
+	PrimaryDark     string
+	PrimaryLight    string
+	BackgroundDark  string
+	BackgroundLight string
+	UseDPS          bool
+	IsLightMode     bool
 }
 
 func mergeColorInfo(dark, light ColorInfo, isLightMode bool) VariantColorInfo {
@@ -702,8 +705,8 @@ func mergeColorInfo(dark, light ColorInfo, isLightMode bool) VariantColorInfo {
 }
 
 func GenerateVariantPalette(opts VariantOptions) VariantPalette {
-	darkOpts := PaletteOptions{IsLight: false, Background: opts.Background, UseDPS: opts.UseDPS}
-	lightOpts := PaletteOptions{IsLight: true, Background: opts.Background, UseDPS: opts.UseDPS}
+	darkOpts := PaletteOptions{IsLight: false, Background: opts.BackgroundDark, UseDPS: opts.UseDPS}
+	lightOpts := PaletteOptions{IsLight: true, Background: opts.BackgroundLight, UseDPS: opts.UseDPS}
 
 	dark := GeneratePalette(opts.PrimaryDark, darkOpts)
 	light := GeneratePalette(opts.PrimaryLight, lightOpts)
