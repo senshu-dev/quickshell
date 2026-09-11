@@ -16,6 +16,7 @@ import qs.Modules.ControlCenter
 import qs.Modules.Dock
 import qs.Modules.Lock
 import qs.Modules.Notifications.Center
+import qs.Modules.TopBar
 import qs.Widgets
 import qs.Modules.Notifications.Popup
 import qs.Modules.OSD
@@ -156,6 +157,25 @@ Item {
                         return;
                     fadeDpmsWindowLoader.loadedWindow.dismiss();
                 }
+            }
+        }
+    }
+
+    Variants {
+        id: topBarVariants
+        model: {
+            const primary = Quickshell.screens.filter(s => s.name === "DP-1");
+            return primary.length > 0 ? primary : (Quickshell.screens.length > 0 ? [Quickshell.screens[0]] : []);
+        }
+
+        delegate: Loader {
+            id: topBarLoader
+            required property var modelData
+            active: true
+            asynchronous: false
+
+            sourceComponent: TopBarWindow {
+                screen: topBarLoader.modelData
             }
         }
     }
@@ -1014,6 +1034,7 @@ Item {
         hyprlandOverviewLoader: root.core?.hyprlandOverviewLoader ?? null
         workspaceRenameModalLoader: workspaceRenameModalLoader
         windowRuleModalLoader: windowRuleModalLoader
+        topBarRepeater: topBarVariants
     }
 
     Variants {

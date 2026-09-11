@@ -20,11 +20,18 @@ Item {
     required property var hyprlandOverviewLoader
     required property var workspaceRenameModalLoader
     required property var windowRuleModalLoader
+    required property var topBarRepeater
 
     function getPreferredBar(refPropertyName) {
         const focusedScreenName = BarWidgetService.getFocusedScreenName();
 
         const bars = [];
+        if (root.topBarRepeater) {
+            for (const inst of root.topBarRepeater.instances) {
+                if (inst?.item)
+                    bars.push(inst.item);
+            }
+        }
         for (const screenName in BarWidgetService.frameHostedBars)
             bars.push(...BarWidgetService.frameBarsForScreen(screenName));
 
