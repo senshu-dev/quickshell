@@ -36,6 +36,13 @@ PanelWindow {
         }
     }
 
+    IpcHandler {
+        target: "panel"
+        function toggle(): void {
+            win.togglePanels();
+        }
+    }
+
     mask: Region { item: pillRow }
 
     property alias controlCenterButtonRef: pillRow
@@ -70,6 +77,19 @@ PanelWindow {
 
     function triggerWallpaperBrowser() {
         triggerDashTab("wallpaper");
+    }
+
+    function togglePanels() {
+        const dashOpen = PopoutService.dankDashPopoutLoader?.item?.dashVisible ?? false;
+        if (dashOpen) {
+            PopoutService.dankDashPopoutLoader.item.dashVisible = false;
+            if (PopoutService.controlCenterLoader?.item?.shouldBeVisible)
+                PopoutService.controlCenterLoader.item.close();
+        } else {
+            triggerDashTab("overview");
+            if (!(PopoutService.controlCenterLoader?.item?.shouldBeVisible ?? false))
+                triggerControlCenter();
+        }
     }
 
     TopBarPillRow {
