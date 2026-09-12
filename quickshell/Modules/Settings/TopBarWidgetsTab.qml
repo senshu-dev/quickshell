@@ -17,6 +17,73 @@ Item {
 
     readonly property var installablePlugins: PluginService.getAllPluginVariants()
 
+    readonly property var builtinWidgets: [
+        {
+            "id": "clockDate",
+            "name": I18n.tr("Clock + Date")
+        },
+        {
+            "id": "weather",
+            "name": I18n.tr("Weather")
+        },
+        {
+            "id": "cpuMonitor",
+            "name": I18n.tr("CPU Monitor")
+        },
+        {
+            "id": "cpuTemp",
+            "name": I18n.tr("CPU Temperature")
+        },
+        {
+            "id": "gpuTemp",
+            "name": I18n.tr("GPU Temperature")
+        },
+        {
+            "id": "ram",
+            "name": I18n.tr("RAM Monitor")
+        },
+        {
+            "id": "diskUsage",
+            "name": I18n.tr("Disk Usage")
+        },
+        {
+            "id": "networkMonitor",
+            "name": I18n.tr("Network Monitor")
+        },
+        {
+            "id": "battery",
+            "name": I18n.tr("Battery")
+        },
+        {
+            "id": "capsLock",
+            "name": I18n.tr("Caps Lock Indicator")
+        },
+        {
+            "id": "idleInhibitor",
+            "name": I18n.tr("Idle Inhibitor")
+        },
+        {
+            "id": "privacyIndicator",
+            "name": I18n.tr("Privacy Indicator")
+        },
+        {
+            "id": "keyboardLayoutName",
+            "name": I18n.tr("Keyboard Layout")
+        },
+        {
+            "id": "media",
+            "name": I18n.tr("Media Player")
+        },
+        {
+            "id": "launcherButton",
+            "name": I18n.tr("Launcher Button")
+        },
+        {
+            "id": "tray",
+            "name": I18n.tr("System Tray")
+        }
+    ].filter(w => !root.widgets.some(existing => existing.id === w.id))
+
     function moveEntry(index, delta) {
         const list = root.widgets.slice();
         const target = index + delta;
@@ -206,6 +273,53 @@ Item {
                             text: I18n.tr("No widgets configured")
                             font.pixelSize: Theme.fontSizeSmall
                             color: Theme.surfaceVariantText
+                        }
+                    }
+                }
+            }
+
+            SettingsCard {
+                tags: ["topbar", "builtin", "add", "cpu", "tray"]
+                width: parent.width
+                visible: root.builtinWidgets.length > 0
+                iconName: "add_box"
+                title: I18n.tr("Add a Built-in Widget")
+
+                Column {
+                    width: parent.width - Theme.spacingM * 2
+                    x: Theme.spacingM
+                    spacing: Theme.spacingXS
+
+                    Repeater {
+                        model: root.builtinWidgets
+
+                        Rectangle {
+                            id: builtinRow
+                            required property var modelData
+
+                            width: parent.width
+                            height: 40
+                            radius: Theme.cornerRadius
+                            color: Theme.floatingWindowFieldColor
+
+                            StyledText {
+                                anchors.left: parent.left
+                                anchors.leftMargin: Theme.spacingS
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: builtinRow.modelData.name
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.surfaceText
+                            }
+
+                            DankActionButton {
+                                anchors.right: parent.right
+                                anchors.rightMargin: Theme.spacingXS
+                                anchors.verticalCenter: parent.verticalCenter
+                                iconName: "add"
+                                iconSize: 16
+                                buttonSize: 28
+                                onClicked: root.addWidget(builtinRow.modelData.id)
+                            }
                         }
                     }
                 }
