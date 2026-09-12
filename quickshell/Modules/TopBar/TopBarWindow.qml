@@ -49,6 +49,7 @@ PanelWindow {
         if (!loader.item)
             return;
         loader.item.triggerScreen = win.screen;
+        loader.item.triggerX = win.screen.width;
         loader.item.toggle();
     }
 
@@ -60,6 +61,7 @@ PanelWindow {
         if (!loader.item)
             return false;
         loader.item.triggerScreen = win.screen;
+        loader.item.triggerX = 0;
         if (loader.item.requestTab)
             loader.item.requestTab(tabId);
         PopoutManager.requestPopout(loader.item, undefined, "topbar-" + tabId);
