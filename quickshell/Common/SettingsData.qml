@@ -163,8 +163,8 @@ Singleton {
     property alias dankBarCenterWidgetsModel: centerWidgetsModel
     property alias dankBarRightWidgetsModel: rightWidgetsModel
 
-    property string currentThemeName: "purple"
-    property string currentThemeCategory: "generic"
+    property string currentThemeName: "dynamic"
+    property string currentThemeCategory: "dynamic"
     property string customThemeFile: ""
     property var registryThemeVariants: ({})
     property string matugenScheme: "scheme-tonal-spot"
@@ -174,7 +174,7 @@ Singleton {
     property bool runUserMatugenTemplates: true
     property string matugenTargetMonitor: ""
     property real popupTransparency: 1.0
-    property real dockTransparency: 1
+    property real dockTransparency: 0.71
     property bool floatingWindowSyncGlobal: true
     property real floatingWindowTransparency: 1.0
     property bool floatingWindowForegroundLayers: true
@@ -243,7 +243,7 @@ Singleton {
     property bool showSeconds: false
     property bool padHours12Hour: false
     property bool useFahrenheit: false
-    property string windSpeedUnit: "kmh"
+    property string windSpeedUnit: "ms"
     property int animationSpeed: SettingsData.AnimationSpeed.Short
     property int customAnimationDuration: 500
     property bool syncComponentAnimationSpeeds: true
@@ -424,26 +424,6 @@ Singleton {
 
     property var controlCenterWidgets: [
         {
-            "id": "volumeSlider",
-            "enabled": true,
-            "width": 50
-        },
-        {
-            "id": "brightnessSlider",
-            "enabled": true,
-            "width": 50
-        },
-        {
-            "id": "wifi",
-            "enabled": true,
-            "width": 50
-        },
-        {
-            "id": "bluetooth",
-            "enabled": true,
-            "width": 50
-        },
-        {
             "id": "audioOutput",
             "enabled": true,
             "width": 50
@@ -454,12 +434,32 @@ Singleton {
             "width": 50
         },
         {
-            "id": "nightMode",
+            "id": "darkMode",
             "enabled": true,
-            "width": 50
+            "width": 25
         },
         {
-            "id": "darkMode",
+            "id": "nightMode",
+            "enabled": true,
+            "width": 25
+        },
+        {
+            "id": "doNotDisturb",
+            "enabled": true,
+            "width": 25
+        },
+        {
+            "id": "builtin_vpn",
+            "enabled": true,
+            "width": 25
+        },
+        {
+            "id": "volumeSlider",
+            "enabled": true,
+            "width": 100
+        },
+        {
+            "id": "plugin_xrayVpn",
             "enabled": true,
             "width": 50
         }
@@ -565,14 +565,16 @@ Singleton {
     property bool closeNiriOverviewOnWindowFocus: true
     property bool rememberLastQuery: false
     property bool rememberLastMode: true
-    property var spotlightSectionViewModes: ({})
+    property var spotlightSectionViewModes: ({
+            "apps": "list"
+        })
     onSpotlightSectionViewModesChanged: saveSettings()
     property var appDrawerSectionViewModes: ({})
     onAppDrawerSectionViewModesChanged: saveSettings()
     property bool niriOverviewOverlayEnabled: true
     property string niriOverviewLauncherStyle: "full"
-    property string dankLauncherV2Size: "compact"
-    property bool dankLauncherV2ShowSourceBadges: true
+    property string dankLauncherV2Size: "micro"
+    property bool dankLauncherV2ShowSourceBadges: false
     property bool dankLauncherV2BorderEnabled: false
     property int dankLauncherV2BorderThickness: 2
     property string dankLauncherV2BorderColor: "primary"
@@ -718,7 +720,7 @@ Singleton {
     property real launcherLogoContrast: 1
     property int launcherLogoSizeOffset: 0
 
-    property string fontFamily: "Inter Variable"
+    property string fontFamily: "Annotation Mono Bold"
     property string monoFontFamily: "Fira Code"
     property int fontWeight: Font.Normal
     property real fontScale: 1.0
@@ -789,12 +791,12 @@ Singleton {
     property bool soundLogin: false
     property bool muteSoundsWhenMediaPlaying: true
 
-    property int acMonitorTimeout: 0
+    property int acMonitorTimeout: 300
     property int acLockTimeout: 0
     property int acSuspendTimeout: 0
     property int acSuspendBehavior: SettingsData.SuspendBehavior.Suspend
     property string acProfileName: ""
-    property int acPostLockMonitorTimeout: 0
+    property int acPostLockMonitorTimeout: 60
     property int batteryMonitorTimeout: 0
     property int batteryLockTimeout: 0
     property int batterySuspendTimeout: 0
@@ -853,7 +855,7 @@ Singleton {
     property bool matugenTemplateGhostty: true
     property bool matugenTemplateKitty: true
     property bool matugenTemplateFoot: true
-    property bool matugenTemplateNeovim: false
+    property bool matugenTemplateNeovim: true
     property bool matugenTemplateAlacritty: true
     property bool matugenTemplateWezterm: true
     property bool matugenTemplateDgop: true
@@ -874,8 +876,8 @@ Singleton {
         })
     property bool matugenTemplateNeovimSetBackground: true
 
-    property bool showDock: false
-    property bool dockAutoHide: false
+    property bool showDock: true
+    property bool dockAutoHide: true
     property bool dockSmartAutoHide: false
     property bool dockUseOverlayLayer: false
     property bool dockShowOnFullscreen: false
@@ -884,28 +886,28 @@ Singleton {
     property bool dockRestoreSpecialWorkspaceOnClick: false
     property bool dockOpenOnOverview: false
     property int dockPosition: SettingsData.Position.Bottom
-    property real dockSpacing: 4
-    property real dockBottomGap: 0
-    property real dockMargin: 0
-    property real dockIconSize: 40
+    property real dockSpacing: 10
+    property real dockBottomGap: -25
+    property real dockMargin: 5
+    property real dockIconSize: 32
     property string dockIndicatorStyle: "circle"
-    property bool dockBorderEnabled: false
-    property string dockBorderColor: "surfaceText"
+    property bool dockBorderEnabled: true
+    property string dockBorderColor: "secondary"
     property real dockBorderOpacity: 1.0
-    property int dockBorderThickness: 1
+    property int dockBorderThickness: 2
     property bool dockIsolateDisplays: false
-    property bool dockLauncherEnabled: false
-    property string dockLauncherLogoMode: "apps"
+    property bool dockLauncherEnabled: true
+    property string dockLauncherLogoMode: "os"
     property string dockLauncherLogoCustomPath: ""
     property string dockLauncherLogoColorOverride: ""
     property int dockLauncherLogoSizeOffset: 0
     property real dockLauncherLogoBrightness: 0.5
     property real dockLauncherLogoContrast: 1
     property int dockMaxVisibleApps: 0
-    property int dockMaxVisibleRunningApps: 0
+    property int dockMaxVisibleRunningApps: 5
     property bool dockShowOverflowBadge: true
     property bool dockShowTrash: false
-    property string dockTrashFileManager: "default"
+    property string dockTrashFileManager: "nautilus"
     property string dockTrashCustomCommand: ""
 
     property bool notificationOverlayEnabled: false
@@ -917,7 +919,7 @@ Singleton {
     property int overviewColumns: 5
     property real overviewScale: 0.16
 
-    property bool modalDarkenBackground: true
+    property bool modalDarkenBackground: false
 
     property bool lockScreenShowPowerActions: true
     property bool lockScreenShowSystemIcons: true
@@ -1161,7 +1163,7 @@ Singleton {
     property real powerActionHoldDuration: 0.5
     property var powerMenuActions: ["reboot", "logout", "poweroff", "lock", "suspend", "restart"]
     property string powerMenuDefaultAction: "logout"
-    property bool powerMenuGridLayout: false
+    property bool powerMenuGridLayout: true
     property string customPowerActionLock: ""
     property string customPowerActionLogout: ""
     property string customPowerActionSuspend: ""
@@ -1182,7 +1184,12 @@ Singleton {
 
     property string displayNameMode: "system"
     property var screenPreferences: ({})
-    property var showOnLastDisplay: ({})
+    property var showOnLastDisplay: ({
+            "dock": true,
+            "notifications": true,
+            "osd": false,
+            "toast": false
+        })
     property var displayProfiles: ({})
     property var displayPreviousRefreshModes: ({})
     property bool displayProfileAutoSelect: false
@@ -1198,9 +1205,9 @@ Singleton {
             "position": 0,
             "screenPreferences": ["all"],
             "showOnLastDisplay": true,
-            "leftWidgets": ["launcherButton", "workspaceSwitcher", "focusedWindow"],
-            "centerWidgets": ["music", "clock", "weather"],
-            "rightWidgets": ["systemTray", "clipboard", "cpuUsage", "memUsage", "notificationButton", "battery", "controlCenterButton"],
+            "leftWidgets": [],
+            "centerWidgets": [],
+            "rightWidgets": [],
             "spacing": 4,
             "innerPadding": 4,
             "barInsetPadding": -1,
@@ -1259,9 +1266,14 @@ Singleton {
             "joinsPrevious": false
         },
         {
+            "id": "bongoCat",
+            "enabled": true,
+            "joinsPrevious": false
+        },
+        {
             "id": "weather",
             "enabled": true,
-            "joinsPrevious": true
+            "joinsPrevious": false
         }
     ]
 
