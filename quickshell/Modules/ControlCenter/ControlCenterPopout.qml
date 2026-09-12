@@ -102,7 +102,7 @@ DankPopout {
     property bool polkitModalOpen: PopoutService.polkitAuthModal?.visible ?? false
     property bool anyModalOpen: credentialsPromptOpen || wifiPasswordModalOpen || polkitModalOpen || powerMenuOpen
 
-    backgroundInteractive: !anyModalOpen
+    backgroundInteractive: !anyModalOpen && !PopoutManager.isLinkedPopout(root)
     hoverDismissSuspended: editMode || anyModalOpen
 
     onCredentialsPromptOpenChanged: {

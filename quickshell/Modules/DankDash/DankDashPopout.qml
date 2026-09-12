@@ -70,6 +70,7 @@ DankPopout {
     popupHeight: contentLoader.item ? contentLoader.item.implicitHeight : 500
     triggerWidth: 80
     screen: triggerScreen
+    backgroundInteractive: !PopoutManager.isLinkedPopout(root)
 
     property bool __focusArmed: false
     property bool __contentReady: false

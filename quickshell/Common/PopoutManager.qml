@@ -10,10 +10,43 @@ Singleton {
 
     property var currentPopoutsByScreen: ({})
     property var currentPopoutTriggers: ({})
-    // Exempts one popout from being auto-evicted when its explicitly linked
-    // sibling opens/registers on the same screen (e.g. the topbar's combined
-    // dash+control-center toggle). Unrelated to normal single-popout eviction.
+    // Together, linkedPopout/linkedPopoutSibling track one atomic pair of
+    // popouts that are allowed to be open at once despite the normal
+    // single-popout-per-screen rule below (e.g. the topbar's combined
+    // dash+control-center toggle). If anything outside the pair tries to
+    // open, BOTH are closed and the link is cleared -- see
+    // _closeLinkedPopoutsIfUnrelated(). If either half of the pair closes
+    // on its own, the link is cleared too (see hidePopout()) -- the
+    // survivor, if still open, is just a normal untracked-until-next-touch
+    // popout at that point, not specially protected anymore.
     property var linkedPopout: null
+    property var linkedPopoutSibling: null
+
+    function isLinkedPopout(popout) {
+        return !!popout && (popout === linkedPopout || popout === linkedPopoutSibling);
+    }
+
+    function clearLinkedPopouts() {
+        linkedPopout = null;
+        linkedPopoutSibling = null;
+    }
+
+    function _closeLinkedPopoutsIfUnrelated(popout) {
+        // Only enforce the pair closure when a complete pair exists.
+        // During open sequence, linkedPopoutSibling is null mid-formation,
+        // so _closeLinkedPopoutsIfUnrelated is a no-op, allowing both halves
+        // to open without interfering with each other.
+        if (!linkedPopout || !linkedPopoutSibling)
+            return;
+        if (isLinkedPopout(popout))
+            return;
+        // Popout is unrelated to the pair -- close both pair members
+        if (linkedPopout && !_isStale(linkedPopout))
+            _closePopout(linkedPopout);
+        if (linkedPopoutSibling && !_isStale(linkedPopoutSibling))
+            _closePopout(linkedPopoutSibling);
+        clearLinkedPopouts();
+    }
 
     // Set by the screenshot IPC handshake (dms screenshot region select); cleared by end() or any popout/modal open.
     property bool screenshotActive: false
@@ -151,6 +184,7 @@ Singleton {
     function showPopout(popout) {
         if (!popout || !popout.screen)
             return;
+        _closeLinkedPopoutsIfUnrelated(popout);
         screenshotActive = false;
         popoutOpening();
 
@@ -158,7 +192,7 @@ Singleton {
 
         for (const otherScreenName in currentPopoutsByScreen) {
             const otherPopout = currentPopoutsByScreen[otherScreenName];
-            if (!otherPopout || otherPopout === popout || otherPopout === linkedPopout)
+            if (!otherPopout || otherPopout === popout || isLinkedPopout(otherPopout))
                 continue;
             if (_isStale(otherPopout)) {
                 currentPopoutsByScreen[otherScreenName] = null;
@@ -175,11 +209,13 @@ Singleton {
     function hidePopout(popout) {
         if (!popout || !popout.screen)
             return;
-        // The linked-popout exemption is a one-shot allowance for the sibling's
-        // own open right after a combined open (see showPopout/_requestPopout);
-        // any close afterward -- of either half of the pair, or of anything else
-        // -- ends it, so a stale exemption can't shield an unrelated later popout.
-        linkedPopout = null;
+        // If either half of the linked pair closes -- from any path: background
+        // click, Escape, or a standalone IPC target -- the pairing is over and
+        // the link is cleared. The surviving half (if it stays open) is not
+        // force-closed: the plan's own individual IPC targets are required to
+        // keep working independently of the combined toggle.
+        if (isLinkedPopout(popout))
+            clearLinkedPopouts();
         const screenName = popout.screen.name;
         if (currentPopoutsByScreen[screenName] === popout) {
             currentPopoutsByScreen[screenName] = null;
@@ -197,6 +233,9 @@ Singleton {
         }
         if (linkedPopout && !_isStale(linkedPopout))
             _closePopout(linkedPopout);
+        if (linkedPopoutSibling && !_isStale(linkedPopoutSibling))
+            _closePopout(linkedPopoutSibling);
+        clearLinkedPopouts();
         // Keep map entries until each popout's close animation finishes (hidePopout).
     }
 
@@ -265,6 +304,7 @@ Singleton {
     function _requestPopout(popout, tabIndex, triggerSource, hoverRequest) {
         if (!popout || !popout.screen)
             return;
+        _closeLinkedPopoutsIfUnrelated(popout);
 
         // Clicks pin a popout, while clicking its active trigger toggles it closed below.
         if (!hoverRequest && popout.hoverDismissEnabled !== undefined)
@@ -285,14 +325,8 @@ Singleton {
             if (otherScreenName === screenName)
                 continue;
             const otherPopout = currentPopoutsByScreen[otherScreenName];
-            if (!otherPopout || otherPopout === linkedPopout)
+            if (!otherPopout)
                 continue;
-
-            if (_isStale(otherPopout)) {
-                currentPopoutsByScreen[otherScreenName] = null;
-                currentPopoutTriggers[otherScreenName] = null;
-                continue;
-            }
 
             if (otherPopout === popout) {
                 movedFromOtherScreen = true;
@@ -301,10 +335,19 @@ Singleton {
                 continue;
             }
 
+            if (isLinkedPopout(otherPopout))
+                continue;
+
+            if (_isStale(otherPopout)) {
+                currentPopoutsByScreen[otherScreenName] = null;
+                currentPopoutTriggers[otherScreenName] = null;
+                continue;
+            }
+
             _closePopout(otherPopout);
         }
 
-        if (currentPopout && currentPopout !== popout && currentPopout !== linkedPopout) {
+        if (currentPopout && currentPopout !== popout && !isLinkedPopout(currentPopout)) {
             if (_isStale(currentPopout)) {
                 currentPopoutsByScreen[screenName] = null;
                 currentPopoutTriggers[screenName] = null;

@@ -83,15 +83,21 @@ PanelWindow {
         const dashLoader = PopoutService.dankDashPopoutLoader;
         const dashOpen = dashLoader?.item?.dashVisible ?? false;
         if (dashOpen) {
-            PopoutManager.linkedPopout = null;
+            PopoutManager.clearLinkedPopouts();
             dashLoader.item.dashVisible = false;
             if (PopoutService.controlCenterLoader?.item?.shouldBeVisible)
                 PopoutService.controlCenterLoader.item.close();
         } else {
             triggerDashTab("overview");
+            // Dash's item exists now; control-center's Loader may not have
+            // instantiated its item yet, so link it as the sole known half
+            // first -- this is enough for control-center's own upcoming
+            // showPopout() call to recognize dash as a pair member and skip
+            // evicting it. The sibling gets recorded right after it opens.
             PopoutManager.linkedPopout = dashLoader?.item ?? null;
             if (!(PopoutService.controlCenterLoader?.item?.shouldBeVisible ?? false))
                 triggerControlCenter();
+            PopoutManager.linkedPopoutSibling = PopoutService.controlCenterLoader?.item ?? null;
         }
     }
 
