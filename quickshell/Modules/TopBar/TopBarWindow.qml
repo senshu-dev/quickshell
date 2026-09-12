@@ -80,13 +80,16 @@ PanelWindow {
     }
 
     function togglePanels() {
-        const dashOpen = PopoutService.dankDashPopoutLoader?.item?.dashVisible ?? false;
+        const dashLoader = PopoutService.dankDashPopoutLoader;
+        const dashOpen = dashLoader?.item?.dashVisible ?? false;
         if (dashOpen) {
-            PopoutService.dankDashPopoutLoader.item.dashVisible = false;
+            PopoutManager.linkedPopout = null;
+            dashLoader.item.dashVisible = false;
             if (PopoutService.controlCenterLoader?.item?.shouldBeVisible)
                 PopoutService.controlCenterLoader.item.close();
         } else {
             triggerDashTab("overview");
+            PopoutManager.linkedPopout = dashLoader?.item ?? null;
             if (!(PopoutService.controlCenterLoader?.item?.shouldBeVisible ?? false))
                 triggerControlCenter();
         }

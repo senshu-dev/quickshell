@@ -10,6 +10,10 @@ Singleton {
 
     property var currentPopoutsByScreen: ({})
     property var currentPopoutTriggers: ({})
+    // Exempts one popout from being auto-evicted when its explicitly linked
+    // sibling opens/registers on the same screen (e.g. the topbar's combined
+    // dash+control-center toggle). Unrelated to normal single-popout eviction.
+    property var linkedPopout: null
 
     // Set by the screenshot IPC handshake (dms screenshot region select); cleared by end() or any popout/modal open.
     property bool screenshotActive: false
@@ -154,7 +158,7 @@ Singleton {
 
         for (const otherScreenName in currentPopoutsByScreen) {
             const otherPopout = currentPopoutsByScreen[otherScreenName];
-            if (!otherPopout || otherPopout === popout)
+            if (!otherPopout || otherPopout === popout || otherPopout === linkedPopout)
                 continue;
             if (_isStale(otherPopout)) {
                 currentPopoutsByScreen[otherScreenName] = null;
@@ -186,6 +190,8 @@ Singleton {
                 continue;
             _closePopout(popout);
         }
+        if (linkedPopout && !_isStale(linkedPopout))
+            _closePopout(linkedPopout);
         // Keep map entries until each popout's close animation finishes (hidePopout).
     }
 
@@ -274,7 +280,7 @@ Singleton {
             if (otherScreenName === screenName)
                 continue;
             const otherPopout = currentPopoutsByScreen[otherScreenName];
-            if (!otherPopout)
+            if (!otherPopout || otherPopout === linkedPopout)
                 continue;
 
             if (_isStale(otherPopout)) {
@@ -293,7 +299,7 @@ Singleton {
             _closePopout(otherPopout);
         }
 
-        if (currentPopout && currentPopout !== popout) {
+        if (currentPopout && currentPopout !== popout && currentPopout !== linkedPopout) {
             if (_isStale(currentPopout)) {
                 currentPopoutsByScreen[screenName] = null;
                 currentPopoutTriggers[screenName] = null;
