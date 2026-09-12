@@ -12,7 +12,21 @@ Item {
 
     readonly property var componentMap: ({
         "clockDate": clockDateComponent,
-        "weather": weatherComponent
+        "weather": weatherComponent,
+        "cpuMonitor": cpuMonitorComponent,
+        "tray": trayComponent,
+        "cpuTemp": cpuTempComponent,
+        "gpuTemp": gpuTempComponent,
+        "ram": ramComponent,
+        "diskUsage": diskUsageComponent,
+        "networkMonitor": networkMonitorComponent,
+        "battery": batteryComponent,
+        "capsLock": capsLockComponent,
+        "idleInhibitor": idleInhibitorComponent,
+        "privacyIndicator": privacyIndicatorComponent,
+        "keyboardLayoutName": keyboardLayoutNameComponent,
+        "media": mediaComponent,
+        "launcherButton": launcherButtonComponent
     })
 
     readonly property var groups: computeGroups(SettingsData.topBarWidgets)
@@ -59,6 +73,76 @@ Item {
     Component {
         id: weatherComponent
         WeatherWidget {}
+    }
+
+    Component {
+        id: cpuMonitorComponent
+        CpuMonitorWidget {}
+    }
+
+    Component {
+        id: trayComponent
+        TrayWidget {}
+    }
+
+    Component {
+        id: cpuTempComponent
+        CpuTemperatureWidget {}
+    }
+
+    Component {
+        id: gpuTempComponent
+        GpuTemperatureWidget {}
+    }
+
+    Component {
+        id: ramComponent
+        RamMonitorWidget {}
+    }
+
+    Component {
+        id: diskUsageComponent
+        DiskUsageWidget {}
+    }
+
+    Component {
+        id: networkMonitorComponent
+        NetworkMonitorWidget {}
+    }
+
+    Component {
+        id: batteryComponent
+        BatteryWidget {}
+    }
+
+    Component {
+        id: capsLockComponent
+        CapsLockIndicatorWidget {}
+    }
+
+    Component {
+        id: idleInhibitorComponent
+        IdleInhibitorWidget {}
+    }
+
+    Component {
+        id: privacyIndicatorComponent
+        PrivacyIndicatorWidget {}
+    }
+
+    Component {
+        id: keyboardLayoutNameComponent
+        KeyboardLayoutNameWidget {}
+    }
+
+    Component {
+        id: mediaComponent
+        MediaWidget {}
+    }
+
+    Component {
+        id: launcherButtonComponent
+        LauncherButtonWidget {}
     }
 
     Row {
