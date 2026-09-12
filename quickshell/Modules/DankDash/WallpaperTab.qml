@@ -31,7 +31,6 @@ Item {
     property Item keyForwardTarget: null
     property var parentPopout: null
     property bool enableAnimation: false
-    property string homeDir: StandardPaths.writableLocation(StandardPaths.HomeLocation)
     property string selectedFileName: ""
     property var targetScreen: null
     property string targetScreenName: targetScreen ? targetScreen.name : ""
@@ -482,18 +481,7 @@ Item {
     }
 
     function loadWallpaperDirectory() {
-        const currentWallpaper = getCurrentWallpaper();
-
-        if (!currentWallpaper || currentWallpaper.startsWith("#")) {
-            if (CacheData.wallpaperLastPath && CacheData.wallpaperLastPath !== "") {
-                wallpaperDir = CacheData.wallpaperLastPath;
-            } else {
-                wallpaperDir = "";
-            }
-            return;
-        }
-
-        wallpaperDir = currentWallpaper.substring(0, currentWallpaper.lastIndexOf('/'));
+        wallpaperDir = Theme.homeDir + "/walls";
     }
 
     function updateSelectedFileName() {
