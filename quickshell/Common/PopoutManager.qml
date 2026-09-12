@@ -175,6 +175,11 @@ Singleton {
     function hidePopout(popout) {
         if (!popout || !popout.screen)
             return;
+        // The linked-popout exemption is a one-shot allowance for the sibling's
+        // own open right after a combined open (see showPopout/_requestPopout);
+        // any close afterward -- of either half of the pair, or of anything else
+        // -- ends it, so a stale exemption can't shield an unrelated later popout.
+        linkedPopout = null;
         const screenName = popout.screen.name;
         if (currentPopoutsByScreen[screenName] === popout) {
             currentPopoutsByScreen[screenName] = null;
