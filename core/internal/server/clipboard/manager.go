@@ -468,6 +468,9 @@ func (m *Manager) readAndStore(r *os.File, mimeType string, altR *os.File, altMi
 	if len(bytes.TrimSpace(data)) == 0 {
 		return
 	}
+	if !m.isImageMimeType(mimeType) && looksLikeSecret(data) {
+		return
+	}
 
 	if !cfg.Disabled && m.db != nil {
 		m.storeClipboardEntry(data, mimeType, altData, altMime)
